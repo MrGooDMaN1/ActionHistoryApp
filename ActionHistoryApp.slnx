@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="ActionHistoryApp.API/ActionHistoryApp.API.csproj" />
+  <Project Path="ActionHistoryApp.Client/ActionHistoryApp.Client.csproj" />
+  <Project Path="ActionHistoryApp.Shared/ActionHistoryApp.Shared.csproj" />
+</Solution>
