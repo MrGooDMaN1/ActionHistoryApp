@@ -18,6 +18,7 @@ namespace ActionHistoryApp.API.Controllers
             _logger = logger;
         }
 
+        //Получить все действия
         // GET: api/actions
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ActionItem>>> GetAction()
@@ -36,6 +37,8 @@ namespace ActionHistoryApp.API.Controllers
             }
         }
 
+        //Поиск действий по id
+        //Изменить на поиск по всему
         // GET: api/actions/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<ActionItem>> GetAction(int  id)
@@ -57,6 +60,7 @@ namespace ActionHistoryApp.API.Controllers
             }
         }
 
+        //Добавить действие
         // POST: api/actions
         [HttpPost] 
         public async Task<ActionResult<ActionItem>> CreateAction(ActionItem action)
@@ -87,6 +91,7 @@ namespace ActionHistoryApp.API.Controllers
             }
         }
 
+        //Изменить выбранное по id дейтсвие
         // PUT: api/actions/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAction(int id, ActionItem action)
@@ -116,6 +121,7 @@ namespace ActionHistoryApp.API.Controllers
             }
         }
 
+        //Удалить действие
         // DELETE: api/actions/{id}
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteAction(int id)

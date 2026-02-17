@@ -6,32 +6,44 @@
 @inject ActionApiService ActionApiService
 @inject HttpClient httpClient
 
-<MudTable Items="@ActionItemDtos" Hover="true" SortLabel="Sort By">
-    <HeaderContent>
-        <MudTh><MudTableSortLabel SortBy="new Func<ActionItemDto, object>(x => x.Id)">Id</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel Enabled="@enabled" SortBy="new Func<ActionItemDto, object>(x => x.DataBaseName)">Data Base Name</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ActionItemDto, object>(x=>x.WhoDid)">Who did</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<ActionItemDto, object>(x => x.WhatDid)">What Did</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<ActionItemDto, object>(x => x.WhenDid)">When Did</MudTableSortLabel></MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Nr">@context.Id</MudTd>
-        <MudTd DataLabel="Sign">@context.DataBaseName</MudTd>
-        <MudTd DataLabel="Name">@context.WhoDid</MudTd>
-        <MudTd DataLabel="Position">@context.WhatDid</MudTd>
-        <MudTd DataLabel="Molar mass">@context.WhenDid</MudTd>
-    </RowTemplate>
-    <PagerContent>
-        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
-    </PagerContent>
-</MudTable>
+@if (_actionItemDtos == null)
+{
+    <p>Загрузка...</p>
+}
+else
+{
+    <AddAction ActionItemDto="@_newActionItem" OnSave="@HandleActionSaved" OnClose="@HandleDrawerClose" />
 
-<MudSwitch @bind-Value="enabled" Color="Color.Info">Enable sorting on the Sign Column</MudSwitch>
+    <MudButton Variant="Variant.Filled" @onclick="OpenAddDrawer"
+               title="View" class="btn btn-primary">
+        Добавить действие
+    </MudButton>
+
+    <MudTable Items="@_actionItemDtos" Hover="true">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortBy="new Func<ActionItemDto, object>(x => x.Id)">№</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ActionItemDto, object>(x => x.DataBaseName)">Название базы</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ActionItemDto, object>(x=>x.WhoDid)">Имя</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ActionItemDto, object>(x => x.WhatDid)">Описание изменений</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ActionItemDto, object>(x => x.WhenDid)">Дата изменений</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Id">@context.Id</MudTd>
+            <MudTd DataLabel="Название базы">@context.DataBaseName</MudTd>
+            <MudTd DataLabel="Имя">@context.WhoDid</MudTd>
+            <MudTd DataLabel="Описание изменения">@context.WhatDid</MudTd>
+            <MudTd DataLabel="Дата изменений">@context.WhenDid</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+        </PagerContent>
+    </MudTable>
+}
 
 @code {
-    private bool enabled = true;
     private bool loading = false;
-    private IEnumerable<ActionItemDto> ActionItemDtos = new List<ActionItemDto>();
+    private IEnumerable<ActionItemDto>? _actionItemDtos;
+    private ActionItemDto? _newActionItem;
 
     protected override async Task OnInitializedAsync()
     {
@@ -43,15 +55,47 @@
         try
         {
             loading = true;
-            ActionItemDtos = await ActionApiService.GetAllActionsAsync();
+            _actionItemDtos = await ActionApiService.GetAllActionsAsync();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading actions: {ex.Message}");
+            Console.WriteLine($"Ошибка загрузки истории действий: {ex.Message}");
+            //Сделать ошибку
         }
         finally
         {
             loading = false;
         }
+    }
+
+    private async Task HandleActionSaved(ActionItemDto actionItemDto)
+    {
+        try
+        {
+            loading = true;
+            await ActionApiService.AddActionAsync(actionItemDto); //Сохроняем
+            await LoadActionsAsync(); // Перезагружаем список
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка при сохронении: : {ex.Message}");
+            //Сделать ошибку
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private void OpenAddDrawer() //HandleActionSelected
+    {
+        _newActionItem = new ActionItemDto();
+        StateHasChanged();
+    }
+
+    private void HandleDrawerClose() //HandleActionSelected
+    {
+        _newActionItem = null;
+        StateHasChanged();
     }
 }

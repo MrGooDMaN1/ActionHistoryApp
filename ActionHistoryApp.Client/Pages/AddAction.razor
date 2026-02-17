@@ -1,0 +1,102 @@
+﻿<div class="drawer-wrapper @(_isOpen ? "slide" : "")">
+    <div class="drawer-mask"></div>
+    <div class="drawer">
+        <div class="drawer-content">
+            @if(ActionItemDto is not null)
+            {
+                <EditForm Model="@ActionItemDto" OnValidSubmit="@HandleValidSubmit">
+                    <div class="mb-3">
+                        <MudInputLabel ForId="databaseName" Class="form-label">Название базы данных</MudInputLabel>
+                        <MudInput id="databaseName" Class="form-control" @bind-Value="ActionItemDto.DataBaseName" />
+                        <ValidationMessage For="@(() => ActionItemDto.DataBaseName)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <MudInputLabel ForId="whoDid" Class="form-label">Имя</MudInputLabel>
+                        <MudInput id="whoDid" Class="form-control" @bind-Value="ActionItemDto.WhoDid" />
+                        <ValidationMessage For="@(() => ActionItemDto.WhoDid)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <MudInputLabel ForId="whatDid" Class="form-label">Описание</MudInputLabel>
+                        <MudInput id="whatDid" Class="form-control" @bind-Value="ActionItemDto.WhatDid"/>
+                        <ValidationMessage For="@(() => ActionItemDto.WhatDid)"/>
+                    </div>
+
+                </EditForm>
+            }
+        </div>
+        <div class="drawer-controls">
+            <MudPaper Class="d-flex justify-space-around flex-grow-1 gap-4" Elevation="0">
+
+                <MudButton Variant="Variant.Filled"
+                           DropShadow="false"
+                           EndIcon="@Icons.Material.Filled.Error"
+                           Color="Color.Error"
+                           @onclick="Close">
+                    Отмена
+                </MudButton>
+
+                <MudButton ButtonType="ButtonType.Submit"
+                           Variant="Variant.Filled"
+                           DropShadow="false"
+                           EndIcon="@Icons.Material.Filled.Send"
+                           Color="Color.Primary"
+                           disabled="@_isSubmitting">
+                    @if (_isSubmitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Сохранить
+                </MudButton>
+            </MudPaper>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool _isOpen;
+    private bool _isSubmitting;
+
+    [Parameter] public EventCallback<ActionItemDto> OnSave { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    // Параметр для получения данных из родительского компонента
+    private ActionItemDto _actionItemDto = new();
+
+    [Parameter] public ActionItemDto? ActionItemDto
+    {
+        get => _actionItemDto;
+        set
+        {
+            if (value != null)
+            {
+                _actionItemDto = value;
+                _isOpen = true;
+            }
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            _isSubmitting = true;
+            _actionItemDto.WhenDid = DateTime.Now;
+            await OnSave.InvokeAsync(_actionItemDto);
+            await Close();
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task Close()
+    {
+        _isOpen = false;
+        _actionItemDto = new ActionItemDto();
+        await OnClose.InvokeAsync();
+        StateHasChanged();
+    }
+}
