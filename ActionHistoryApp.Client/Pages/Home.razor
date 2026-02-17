@@ -1,7 +1,57 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+@using System.Net.Http.Json
+@using ActionHistoryApp.Shared
+@using ActionHistoryApp.Client.Services
+@inject ActionApiService ActionApiService
+@inject HttpClient httpClient
 
-<h1>Hello, world!</h1>
+<MudTable Items="@ActionItemDtos" Hover="true" SortLabel="Sort By">
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortBy="new Func<ActionItemDto, object>(x => x.Id)">Id</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel Enabled="@enabled" SortBy="new Func<ActionItemDto, object>(x => x.DataBaseName)">Data Base Name</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ActionItemDto, object>(x=>x.WhoDid)">Who did</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<ActionItemDto, object>(x => x.WhatDid)">What Did</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<ActionItemDto, object>(x => x.WhenDid)">When Did</MudTableSortLabel></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Nr">@context.Id</MudTd>
+        <MudTd DataLabel="Sign">@context.DataBaseName</MudTd>
+        <MudTd DataLabel="Name">@context.WhoDid</MudTd>
+        <MudTd DataLabel="Position">@context.WhatDid</MudTd>
+        <MudTd DataLabel="Molar mass">@context.WhenDid</MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+    </PagerContent>
+</MudTable>
 
-Welcome to your new app.
+<MudSwitch @bind-Value="enabled" Color="Color.Info">Enable sorting on the Sign Column</MudSwitch>
+
+@code {
+    private bool enabled = true;
+    private bool loading = false;
+    private IEnumerable<ActionItemDto> ActionItemDtos = new List<ActionItemDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadActionsAsync();
+    }
+
+    private async Task LoadActionsAsync()
+    {
+        try
+        {
+            loading = true;
+            ActionItemDtos = await ActionApiService.GetAllActionsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading actions: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}

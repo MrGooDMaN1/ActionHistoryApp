@@ -22,7 +22,64 @@ public class ActionApiService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при получении действий API");
+            _logger.LogError(ex, "Ошибка при получении историй действий");
+            throw;
+        }
+    }
+
+    public async Task<ActionItemDto?> GetActionAsync(int id)
+    {
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<ActionItemDto>($"api/actions/{id}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при получении истории действяи {id}", id);
+            throw;
+        }
+    }
+
+    public async Task<ActionItemDto?> AddActionAsync(ActionItemDto action)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/actions", action);
+
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<ActionItemDto>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при добовлении истории действий");
+            throw;
+        }
+    }
+
+    public async Task UpdateActionAsync(int id, ActionItemDto action)
+    {
+        try
+        {
+            var response = await _httpClient.PutAsJsonAsync($"api/actions/{id}", action);
+            response.EnsureSuccessStatusCode();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка обновления истории действия: {Id}", id);
+            throw;
+        }
+    }
+
+    public async Task DeleteActionAsync(int id)
+    {
+        try
+        {
+            var response = await _httpClient.DeleteAsync($"api/actions/{id}");
+            response.EnsureSuccessStatusCode();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при удалении истории действия: {id}", id);
             throw;
         }
     }

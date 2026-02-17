@@ -36,6 +36,7 @@ namespace ActionHistoryApp.API.Controllers
             }
         }
 
+        // GET: api/actions/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<ActionItem>> GetAction(int  id)
         {
@@ -116,7 +117,6 @@ namespace ActionHistoryApp.API.Controllers
         }
 
         // DELETE: api/actions/{id}
-
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteAction(int id)
         {
