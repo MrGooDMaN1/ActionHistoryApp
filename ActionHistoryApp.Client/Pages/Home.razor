@@ -14,18 +14,28 @@ else
 {
     <AddAction ActionItemDto="@_newActionItem" OnSave="@HandleActionSaved" OnClose="@HandleDrawerClose" />
 
-    <MudButton Variant="Variant.Filled" @onclick="OpenAddDrawer"
-               title="View" class="btn btn-primary">
+    <MudButton Variant="Variant.Filled" 
+               @onclick="OpenAddDrawer"
+               Title="View" 
+               Class="btn btn-primary">
         Добавить действие
     </MudButton>
 
-    <MudTable Items="@_actionItemDtos" Hover="true">
+    <MudTable Items="@_actionItemDtos" 
+              Hover="true" 
+              SortLabel="Сортировка" 
+              Loading="@_loading" 
+              LoadingProgressColor="Color.Primary" 
+              Striped="true" 
+              Bordered=" true">
+
         <HeaderContent>
             <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortBy="new Func<ActionItemDto, object>(x => x.Id)">№</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<ActionItemDto, object>(x => x.DataBaseName)">Название базы</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<ActionItemDto, object>(x=>x.WhoDid)">Имя</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<ActionItemDto, object>(x => x.WhatDid)">Описание изменений</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<ActionItemDto, object>(x => x.WhenDid)">Дата изменений</MudTableSortLabel></MudTh>
+            <MudTh>Действия</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Id">@context.Id</MudTd>
@@ -33,6 +43,13 @@ else
             <MudTd DataLabel="Имя">@context.WhoDid</MudTd>
             <MudTd DataLabel="Описание изменения">@context.WhatDid</MudTd>
             <MudTd DataLabel="Дата изменений">@context.WhenDid</MudTd>
+            <MudTd DataLabel="Действия">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                               Size="Size.Small"
+                               Color="Color.Error"
+                               @onclick="() => DeleteAction(context)"
+                               Title ="Удалить запись"/>
+            </MudTd>
         </RowTemplate>
         <PagerContent>
             <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
@@ -41,7 +58,7 @@ else
 }
 
 @code {
-    private bool loading = false;
+    private bool _loading = false;
     private IEnumerable<ActionItemDto>? _actionItemDtos;
     private ActionItemDto? _newActionItem;
 
@@ -54,7 +71,7 @@ else
     {
         try
         {
-            loading = true;
+            _loading = true;
             _actionItemDtos = await ActionApiService.GetAllActionsAsync();
         }
         catch (Exception ex)
@@ -64,7 +81,7 @@ else
         }
         finally
         {
-            loading = false;
+            _loading = false;
         }
     }
 
@@ -72,7 +89,7 @@ else
     {
         try
         {
-            loading = true;
+            _loading = true;
             Console.WriteLine($"Полученые данные:");
             Console.WriteLine($"Название базы данных: {actionItemDto.DataBaseName}");
             Console.WriteLine($"Имя: {actionItemDto.WhoDid}");
@@ -87,7 +104,7 @@ else
         }
         finally
         {
-            loading = false;
+            _loading = false;
         }
     }
 
@@ -106,5 +123,10 @@ else
         _newActionItem = null;
         Console.WriteLine($"Сработал HandleDrawerClose");
         StateHasChanged();
+    }
+
+    private async Task DeleteAction(ActionItemDto action)
+    {
+        
     }
 }
