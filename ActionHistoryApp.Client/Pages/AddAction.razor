@@ -2,61 +2,105 @@
     <div class="drawer-mask"></div>
     <div class="drawer">
         <div class="drawer-content">
-            @if(ActionItemDto is not null)
+            @if (actionItemDto is not null)
             {
-                <EditForm Model="@ActionItemDto" OnValidSubmit="@HandleValidSubmit">
-                    <div class="mb-3">
-                        <MudInputLabel ForId="databaseName" Class="form-label">Название базы данных</MudInputLabel>
-                        <MudInput id="databaseName" Class="form-control" @bind-Value="ActionItemDto.DataBaseName" />
-                        <ValidationMessage For="@(() => ActionItemDto.DataBaseName)" />
-                    </div>
+                <EditForm Model="@actionItemDto" OnValidSubmit="@HandleValidSubmit" @ref="_editForm">
+                    <DataAnnotationsValidator/>
 
-                    <div class="mb-3">
-                        <MudInputLabel ForId="whoDid" Class="form-label">Имя</MudInputLabel>
-                        <MudInput id="whoDid" Class="form-control" @bind-Value="ActionItemDto.WhoDid" />
-                        <ValidationMessage For="@(() => ActionItemDto.WhoDid)" />
-                    </div>
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudSelect @bind-Value="actionItemDto.DataBaseName"
+                                       Label="Название базы"
+                                       For="@(() => actionItemDto.DataBaseName)"
+                                       Variant="Variant.Outlined"
+                                       Required="true"
+                                       RequiredError="Выберите имя исполнителя"
+                                       Immediate="true">
+                                @foreach (var state in _databaseNameStates)
+                                {
+                                    <MudSelectItem Value="state">@state</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
 
-                    <div class="mb-3">
-                        <MudInputLabel ForId="whatDid" Class="form-label">Описание</MudInputLabel>
-                        <MudInput id="whatDid" Class="form-control" @bind-Value="ActionItemDto.WhatDid"/>
-                        <ValidationMessage For="@(() => ActionItemDto.WhatDid)"/>
+                        <MudItem xs="12">
+                            <MudSelect @bind-Value="actionItemDto.WhoDid"
+                                       Label="Имя исполнителя"
+                                       For="@(() => actionItemDto.WhoDid)"
+                                       Variant="Variant.Outlined"
+                                       Required="true"
+                                       RequiredError="Выберите имя исполнителя"
+                                       Immediate="true">
+                                @foreach (var state in _states)
+                                {
+                                    <MudSelectItem Value="state">@state</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+
+
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="actionItemDto.WhatDid"
+                                          Label="Описание"
+                                          For="@(() => actionItemDto.WhatDid)"
+                                          Variant="Variant.Outlined"
+                                          Lines="5"
+                                          Required="true"
+                                          RequiredError="Введите описание" 
+                                          Immediate ="true"/>
+                        </MudItem>
+                    </MudGrid>
+                    
+
+
+
+                    <div class="drawer-controls">
+                        <MudPaper Class="d-flex justify-space-around flex-grow-1 gap-4" Elevation="0">
+
+                            <MudButton Variant="Variant.Filled"
+                                       DropShadow="false"
+                                       EndIcon="@Icons.Material.Filled.Error"
+                                       Color="Color.Error"
+                                       @onclick="Close">
+                                Отмена
+                            </MudButton>
+
+                            <MudButton ButtonType="ButtonType.Submit"
+                                       Variant="Variant.Filled"
+                                       DropShadow="false"
+                                       EndIcon="@Icons.Material.Filled.Send"
+                                       Color="Color.Primary"
+                                       @onclick="Comment"
+                                       disabled="@_isSubmitting">
+                                @if (_isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Сохранить
+                            </MudButton>
+                        </MudPaper>
                     </div>
 
                 </EditForm>
             }
         </div>
-        <div class="drawer-controls">
-            <MudPaper Class="d-flex justify-space-around flex-grow-1 gap-4" Elevation="0">
-
-                <MudButton Variant="Variant.Filled"
-                           DropShadow="false"
-                           EndIcon="@Icons.Material.Filled.Error"
-                           Color="Color.Error"
-                           @onclick="Close">
-                    Отмена
-                </MudButton>
-
-                <MudButton ButtonType="ButtonType.Submit"
-                           Variant="Variant.Filled"
-                           DropShadow="false"
-                           EndIcon="@Icons.Material.Filled.Send"
-                           Color="Color.Primary"
-                           disabled="@_isSubmitting">
-                    @if (_isSubmitting)
-                    {
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                    }
-                    Сохранить
-                </MudButton>
-            </MudPaper>
-        </div>
     </div>
 </div>
 
 @code {
+    private readonly string[] _states =
+    {
+        "Коржов", "Водолагина", "Фокина", "Муравьев", "Харламов", "Столбин", "Коваленко", "Николаев", "Усков", "Благовидов"
+    };
+
+    private readonly string[] _databaseNameStates =
+{
+        "Sheigerevich", "1112", "SchoolCafe", "Pspion", "IT", "EcoBiz", "Kredo"
+    };
+
     private bool _isOpen;
     private bool _isSubmitting;
+    private EditForm? _editForm;
 
     [Parameter] public EventCallback<ActionItemDto> OnSave { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
@@ -64,7 +108,8 @@
     // Параметр для получения данных из родительского компонента
     private ActionItemDto _actionItemDto = new();
 
-    [Parameter] public ActionItemDto? ActionItemDto
+    [Parameter]
+    public ActionItemDto? actionItemDto
     {
         get => _actionItemDto;
         set
@@ -73,6 +118,7 @@
             {
                 _actionItemDto = value;
                 _isOpen = true;
+                StateHasChanged();
             }
         }
     }
@@ -83,11 +129,22 @@
         {
             _isSubmitting = true;
             _actionItemDto.WhenDid = DateTime.Now;
+
+            Console.WriteLine("Сохраняем форму");
+            Console.WriteLine($"Название базы данных: {_actionItemDto.DataBaseName}");
+            Console.WriteLine($"Имя: {_actionItemDto.WhoDid}");
+            Console.WriteLine($"Описание: {_actionItemDto.WhatDid}");
+
             await OnSave.InvokeAsync(_actionItemDto);
             await Close();
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка при сохранении: {ex.Message}");
+        }
         finally
         {
+            Console.WriteLine("finally");
             _isSubmitting = false;
         }
     }
@@ -96,7 +153,13 @@
     {
         _isOpen = false;
         _actionItemDto = new ActionItemDto();
+        Console.WriteLine("Закрываем форму");
         await OnClose.InvokeAsync();
         StateHasChanged();
+    }
+
+    private async Task Comment()
+    {
+        Console.WriteLine("Нажимаем на кнопку сохранить");
     }
 }

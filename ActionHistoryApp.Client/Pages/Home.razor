@@ -73,12 +73,16 @@ else
         try
         {
             loading = true;
+            Console.WriteLine($"Полученые данные:");
+            Console.WriteLine($"Название базы данных: {actionItemDto.DataBaseName}");
+            Console.WriteLine($"Имя: {actionItemDto.WhoDid}");
+            Console.WriteLine($"Описание: {actionItemDto.WhatDid}");
             await ActionApiService.AddActionAsync(actionItemDto); //Сохроняем
             await LoadActionsAsync(); // Перезагружаем список
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Ошибка при сохронении: : {ex.Message}");
+            Console.WriteLine($"Ошибка при сохронении: {ex.Message}");
             //Сделать ошибку
         }
         finally
@@ -90,12 +94,17 @@ else
     private void OpenAddDrawer() //HandleActionSelected
     {
         _newActionItem = new ActionItemDto();
+        Console.WriteLine($"Открываем OpenAddDrawer");
+        Console.WriteLine($"Название базы данных: {_newActionItem.DataBaseName}");
+        Console.WriteLine($"Имя: {_newActionItem.WhoDid}");
+        Console.WriteLine($"Описание: {_newActionItem.WhatDid}");
         StateHasChanged();
     }
 
     private void HandleDrawerClose() //HandleActionSelected
     {
         _newActionItem = null;
+        Console.WriteLine($"Сработал HandleDrawerClose");
         StateHasChanged();
     }
 }
