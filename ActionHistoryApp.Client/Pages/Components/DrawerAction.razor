@@ -16,9 +16,9 @@
                                        Required="true"
                                        RequiredError="Выберите имя исполнителя"
                                        Immediate="true">
-                                @foreach (var state in _databaseNameStates)
+                                @foreach (var dataList in _databases)
                                 {
-                                    <MudSelectItem Value="state">@state</MudSelectItem>
+                                    <MudSelectItem Value="dataList">@dataList</MudSelectItem>
                                 }
                             </MudSelect>
                         </MudItem>
@@ -31,9 +31,9 @@
                                        Required="true"
                                        RequiredError="Выберите имя исполнителя"
                                        Immediate="true">
-                                @foreach (var state in _states)
+                                @foreach (var dataList in _executors)
                                 {
-                                    <MudSelectItem Value="state">@state</MudSelectItem>
+                                    <MudSelectItem Value="dataList">@dataList</MudSelectItem>
                                 }
                             </MudSelect>
                         </MudItem>
@@ -85,15 +85,8 @@
 </div>
 
 @code {
-    private readonly string[] _states =
-    {
-        "Коржов", "Водолагина", "Фокина", "Муравьев", "Харламов", "Столбин", "Коваленко", "Николаев", "Усков", "Благовидов"
-    };
-
-    private readonly string[] _databaseNameStates =
-{
-        "Sheigerevich", "1112", "SchoolCafe", "Pspion", "IT", "EcoBiz", "Kredo"
-    };
+    private IEnumerable<string>? _executors;
+    private IEnumerable<string>? _databases;
 
     private bool _isOpen;
     private bool _isSubmitting;
@@ -123,6 +116,17 @@
                 Console.WriteLine($"Режим: {(_isUpdate ? "Редактирование" : "Добавление")}");
             }
         }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _executors = ExecutorsList.Executors;
+        _databases = DatabaseNameList.databaseName;
     }
 
     private async Task HandleValidSubmit()

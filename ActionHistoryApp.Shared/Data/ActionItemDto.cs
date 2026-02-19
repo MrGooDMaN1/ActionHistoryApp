@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ActionHistoryApp.Shared
+namespace ActionHistoryApp.Shared.Data
 {
     public class ActionItemDto
     {

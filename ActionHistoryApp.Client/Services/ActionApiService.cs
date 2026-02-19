@@ -1,5 +1,5 @@
 ﻿using System.Net.Http.Json;
-using ActionHistoryApp.Shared;
+using ActionHistoryApp.Shared.Data;
 
 namespace ActionHistoryApp.Client.Services;
 
