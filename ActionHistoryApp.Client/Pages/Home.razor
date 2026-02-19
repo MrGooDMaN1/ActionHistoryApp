@@ -16,20 +16,35 @@ else
 {
     <AddAction ActionItemDto="@_newActionItem" OnSave="@HandleActionSaved" OnClose="@HandleDrawerClose" />
 
-    <MudButton Variant="Variant.Filled" 
-               @onclick="OpenAddDrawer"
-               Title="View" 
-               Class="btn btn-primary">
-        Добавить действие
-    </MudButton>
-
-    <MudTable Items="@_actionItemDtos" 
+    <MudTable Items="@FilteredItems"
+              @ref="_table"
               Hover="true" 
               SortLabel="Сортировка" 
               Loading="@_loading" 
               LoadingProgressColor="Color.Primary" 
               Striped="true" 
               Bordered=" true">
+
+        <ToolBarContent>
+            <MudButton Variant="Variant.Filled"
+                       @onclick="OpenAddDrawer"
+                       Title="View"
+                       Class="btn btn-primary">
+                Добавить действие
+            </MudButton>
+
+            <MudSpacer />
+
+            <MudTextField Immediate="true"
+                          @bind-Value="searchString" 
+                          Placeholder="Поиск" 
+                          Adornment="Adornment.Start" 
+                          AdornmentIcon="@Icons.Material.Filled.Search" 
+                          IconSize="Size.Medium" 
+                          Class="mt-0" 
+                          Clearable="true" 
+                          For="@(() => searchString)"/>
+        </ToolBarContent>
 
         <HeaderContent>
             <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortBy="new Func<ActionItemDto, object>(x => x.Id)">№</MudTableSortLabel></MudTh>
@@ -44,7 +59,7 @@ else
             <MudTd DataLabel="Название базы">@context.DataBaseName</MudTd>
             <MudTd DataLabel="Имя">@context.WhoDid</MudTd>
             <MudTd DataLabel="Описание изменения">@context.WhatDid</MudTd>
-            <MudTd DataLabel="Дата изменений">@context.WhenDid</MudTd>
+            <MudTd DataLabel="Дата изменений">@context.WhenDid.ToString("dd.MM.yyyy HH.mm")</MudTd>
             <MudTd DataLabel="Действия">
                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                Size="Size.Small"
@@ -53,6 +68,12 @@ else
                                Title ="Удалить запись"/>
             </MudTd>
         </RowTemplate>
+        <NoRecordsContent>
+            <MudText>Совпадающих записей не найдено</MudText>
+        </NoRecordsContent>
+        <LoadingContent>
+            <MudText>Загрузка...</MudText>
+        </LoadingContent>
         <PagerContent>
             <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
         </PagerContent>
@@ -61,8 +82,22 @@ else
 
 @code {
     private bool _loading = false;
+    private string? searchString;
     private IEnumerable<ActionItemDto>? _actionItemDtos;
     private ActionItemDto? _newActionItem;
+    private MudTable<ActionItemDto>? _table;
+
+    private IEnumerable<ActionItemDto> FilteredItems =>
+    string.IsNullOrWhiteSpace(searchString)
+        ? _actionItemDtos ?? Enumerable.Empty<ActionItemDto>()
+        : (_actionItemDtos ?? Enumerable.Empty<ActionItemDto>())
+            .Where(x =>
+                (x.DataBaseName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (x.WhoDid?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (x.WhatDid?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                x.Id.ToString().Contains(searchString) ||
+                x.WhenDid.ToString("dd.MM.yyyy HH:mm").Contains(searchString)
+            );
 
     protected override async Task OnInitializedAsync()
     {
@@ -79,7 +114,7 @@ else
         catch (Exception ex)
         {
             Console.WriteLine($"Ошибка загрузки истории действий: {ex.Message}");
-            //Сделать ошибку
+            SnackbarService.Add($"Ошибка загрузки истории действий: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -98,11 +133,12 @@ else
             Console.WriteLine($"Описание: {actionItemDto.WhatDid}");
             await ActionApiService.AddActionAsync(actionItemDto); //Сохроняем
             await LoadActionsAsync(); // Перезагружаем список
+            SnackbarService.Add($"Успешно сохранено", Severity.Success);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Ошибка при сохронении: {ex.Message}");
-            //Сделать ошибку
+            SnackbarService.Add($"Ошибка при сохронении: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -127,30 +163,31 @@ else
         StateHasChanged();
     }
 
-    private async Task DeleteAction(ActionItemDto action)
+    private async Task DeleteAction(ActionItemDto action) //Логика удаления и диалогового окна 
     {
-        var parameters = new DialogParameters
+        var parameters = new DialogParameters //Создаем параметры
         {
+            {"Title", "Подтверждение удаления"},
             {"ContentText", $"Вы действительно хотите удалить запись №{action.Id}?"},
             {"ButtonText", "Удалить"},
             {"Color", Color.Error}
         };
 
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall }; //Настройки для диалогового окна
 
-        var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Подтверждение удаления", parameters, options);
+        var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Подтверждение удаления", parameters, options); //Передаем параметры и настройки
         var result = await dialog.Result;
 
-        if(!result.Canceled)
+        if(!result.Canceled) //Если нажата кнопка удаления
         {
-            try
+            try //Логика удаления
             {
                 _loading = true;
                 await ActionApiService.DeleteActionAsync(action.Id);
                 await LoadActionsAsync();
                 SnackbarService.Add("Запись успешно удалена", Severity.Success);
             }
-            catch (Exception ex)
+            catch (Exception ex) //Ошибки при удалении 
             {
                 SnackbarService.Add($"Ошибка удаления: {ex.Message}", Severity.Error);
                 Console.WriteLine($"Ошибка удаления: {ex.Message}");

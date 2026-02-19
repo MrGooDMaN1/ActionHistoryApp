@@ -37,29 +37,6 @@ namespace ActionHistoryApp.API.Controllers
             }
         }
 
-        //Поиск действий по id
-        //Изменить на поиск по всему
-        // GET: api/actions/{id}
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ActionItem>> GetAction(int  id)
-        {
-            try
-            {
-                var action = await _context.Actions.FindAsync(id);
-                
-                if(action == null)
-                {
-                    return NotFound();
-                }
-                return Ok(action);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка при получении действия {id}", id);
-                return StatusCode(500, "Внутренняя ошибка сервера");
-            }
-        }
-
         //Добавить действие
         // POST: api/actions
         [HttpPost] 

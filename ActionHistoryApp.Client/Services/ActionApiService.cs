@@ -27,18 +27,6 @@ public class ActionApiService
         }
     }
 
-    public async Task<ActionItemDto?> GetActionAsync(int id)
-    {
-        try
-        {
-            return await _httpClient.GetFromJsonAsync<ActionItemDto>($"api/actions/{id}");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Ошибка при получении истории действяи {id}", id);
-            throw;
-        }
-    }
 
     public async Task<ActionItemDto?> AddActionAsync(ActionItemDto action)
     {
