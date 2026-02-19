@@ -58,7 +58,7 @@
                             <MudButton Variant="Variant.Filled"
                                        DropShadow="false"
                                        EndIcon="@Icons.Material.Filled.Error"
-                                       Color="Color.Error"
+                                       Color="Color.Default"
                                        @onclick="Close">
                                 Отмена
                             </MudButton>
@@ -66,15 +66,14 @@
                             <MudButton ButtonType="ButtonType.Submit"
                                        Variant="Variant.Filled"
                                        DropShadow="false"
-                                       EndIcon="@Icons.Material.Filled.Send"
-                                       Color="Color.Primary"
-                                       @onclick="Comment"
+                                       EndIcon="@(_isUpdate ? Icons.Material.Filled.Create : Icons.Material.Filled.Send)"
+                                       Color="@(_isUpdate ? Color.Warning : Color.Primary)"
                                        disabled="@_isSubmitting">
                                 @if (_isSubmitting)
                                 {
-                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
                                 }
-                                Сохранить
+                                @(_isUpdate ? "Изменить" : "Сохранить")
                             </MudButton>
                         </MudPaper>
                     </div>
@@ -98,9 +97,11 @@
 
     private bool _isOpen;
     private bool _isSubmitting;
+    private bool _isUpdate;
     private EditForm? _editForm;
 
     [Parameter] public EventCallback<ActionItemDto> OnSave { get; set; }
+    [Parameter] public EventCallback<ActionItemDto> OnUpdate { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
 
     // Параметр для получения данных из родительского компонента
@@ -115,8 +116,11 @@
             if (value != null)
             {
                 _actionItemDto = value;
+                _isUpdate = value.Id != 0;
                 _isOpen = true;
                 StateHasChanged();
+
+                Console.WriteLine($"Режим: {(_isUpdate ? "Редактирование" : "Добавление")}");
             }
         }
     }
@@ -126,14 +130,23 @@
         try
         {
             _isSubmitting = true;
-            _actionItemDto.WhenDid = DateTime.Now;
 
-            Console.WriteLine("Сохраняем форму");
-            Console.WriteLine($"Название базы данных: {_actionItemDto.DataBaseName}");
-            Console.WriteLine($"Имя: {_actionItemDto.WhoDid}");
+            Console.WriteLine($"{(_isUpdate ? "Обновление" : "Сохранение")} формы:");
+            Console.WriteLine($"ID: {_actionItemDto.Id}");
+            Console.WriteLine($"База данных: {_actionItemDto.DataBaseName}");
+            Console.WriteLine($"Исполнитель: {_actionItemDto.WhoDid}");
             Console.WriteLine($"Описание: {_actionItemDto.WhatDid}");
 
-            await OnSave.InvokeAsync(_actionItemDto);
+            if (_isUpdate)
+            {
+                await OnUpdate.InvokeAsync(_actionItemDto);
+            }
+            else
+            {
+                _actionItemDto.WhenDid = DateTime.Now;
+                await OnSave.InvokeAsync(_actionItemDto);
+            }
+
             await Close();
         }
         catch (Exception ex)
@@ -150,14 +163,11 @@
     private async Task Close()
     {
         _isOpen = false;
+        _isUpdate = false;
+        _isSubmitting = false;
         _actionItemDto = new ActionItemDto();
         Console.WriteLine("Закрываем форму");
         await OnClose.InvokeAsync();
         StateHasChanged();
-    }
-
-    private async Task Comment()
-    {
-        Console.WriteLine("Нажимаем на кнопку сохранить");
     }
 }

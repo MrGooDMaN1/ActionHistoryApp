@@ -14,7 +14,7 @@
 }
 else
 {
-    <AddAction ActionItemDto="@_newActionItem" OnSave="@HandleActionSaved" OnClose="@HandleDrawerClose" />
+    <DrawerAction ActionItemDto="@_newActionItem" OnSave="@HandleActionSaved" OnClose="@HandleDrawerClose" OnUpdate="@HandleUpdateAction"/>
 
     <MudTable Items="@FilteredItems"
               @ref="_table"
@@ -28,7 +28,7 @@ else
         <ToolBarContent>
             <MudButton Variant="Variant.Filled"
                        @onclick="OpenAddDrawer"
-                       Title="View"
+                       Title="Добавить действие"
                        Class="btn btn-primary">
                 Добавить действие
             </MudButton>
@@ -61,11 +61,19 @@ else
             <MudTd DataLabel="Описание изменения">@context.WhatDid</MudTd>
             <MudTd DataLabel="Дата изменений">@context.WhenDid.ToString("dd.MM.yyyy HH.mm")</MudTd>
             <MudTd DataLabel="Действия">
-                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                               Size="Size.Small"
-                               Color="Color.Error"
-                               @onclick="() => DeleteAction(context)"
-                               Title ="Удалить запись"/>
+                <MudStack Spacing="4" Row="true" Justify="Justify.SpaceEvenly">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   Size="Size.Small"
+                                   Color="Color.Error"
+                                   @onclick="() => DeleteAction(context)"
+                                   Title="Удалить запись" />
+
+                    <MudIconButton Icon="@Icons.Material.Filled.Create"
+                                   Size="Size.Small"
+                                   Color="Color.Warning"
+                                   @onclick="() => UpdateAction(context)"
+                                   Title="Изменить запись" />
+                </MudStack>
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>
@@ -146,7 +154,32 @@ else
         }
     }
 
-    private void OpenAddDrawer() //HandleActionSelected
+    private async Task HandleUpdateAction(ActionItemDto actionItemDto)
+    {
+        try
+        {
+            _loading = true;
+            Console.WriteLine("Измененые данные:");
+            Console.WriteLine($"Номер действия: {actionItemDto.Id}");
+            Console.WriteLine($"Название базы данных: {actionItemDto.DataBaseName}");
+            Console.WriteLine($"Имя: {actionItemDto.WhoDid}");
+            Console.WriteLine($"Описание: {actionItemDto.WhatDid}");
+            await ActionApiService.UpdateActionAsync(actionItemDto.Id, actionItemDto); //Сохроняем
+            await LoadActionsAsync(); // Перезагружаем список
+            SnackbarService.Add($"Успешно изменено", Severity.Info);
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine($"Ошибка при сохронении: {ex.Message}");
+            SnackbarService.Add($"Ошибка при сохронении: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void OpenAddDrawer() //Открываем доп компонент
     {
         _newActionItem = new ActionItemDto();
         Console.WriteLine($"Открываем OpenAddDrawer");
@@ -156,7 +189,17 @@ else
         StateHasChanged();
     }
 
-    private void HandleDrawerClose() //HandleActionSelected
+    private async Task UpdateAction(ActionItemDto updateAction) // Логика редактирования
+    {
+        _newActionItem = updateAction;
+        Console.WriteLine($"Открываем OpenAddDrawer");
+        Console.WriteLine($"Название базы данных: {_newActionItem.DataBaseName}");
+        Console.WriteLine($"Имя: {_newActionItem.WhoDid}");
+        Console.WriteLine($"Описание: {_newActionItem.WhatDid}");
+        StateHasChanged();
+    }
+
+    private void HandleDrawerClose() //Закрываем доп компонент
     {
         _newActionItem = null;
         Console.WriteLine("Сработал HandleDrawerClose");
