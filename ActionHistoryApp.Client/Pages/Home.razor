@@ -5,6 +5,8 @@
 @using ActionHistoryApp.Client.Services
 @inject ActionApiService ActionApiService
 @inject HttpClient httpClient
+@inject ISnackbar SnackbarService
+@inject IDialogService DialogService
 
 @if (_actionItemDtos == null)
 {
@@ -121,12 +123,42 @@ else
     private void HandleDrawerClose() //HandleActionSelected
     {
         _newActionItem = null;
-        Console.WriteLine($"Сработал HandleDrawerClose");
+        Console.WriteLine("Сработал HandleDrawerClose");
         StateHasChanged();
     }
 
     private async Task DeleteAction(ActionItemDto action)
     {
-        
+        var parameters = new DialogParameters
+        {
+            {"ContentText", $"Вы действительно хотите удалить запись №{action.Id}?"},
+            {"ButtonText", "Удалить"},
+            {"Color", Color.Error}
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Подтверждение удаления", parameters, options);
+        var result = await dialog.Result;
+
+        if(!result.Canceled)
+        {
+            try
+            {
+                _loading = true;
+                await ActionApiService.DeleteActionAsync(action.Id);
+                await LoadActionsAsync();
+                SnackbarService.Add("Запись успешно удалена", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                SnackbarService.Add($"Ошибка удаления: {ex.Message}", Severity.Error);
+                Console.WriteLine($"Ошибка удаления: {ex.Message}");
+            }
+            finally
+            {
+                _loading = false;
+            }
+        }
     }
 }
