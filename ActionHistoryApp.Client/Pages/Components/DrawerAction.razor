@@ -1,6 +1,11 @@
 ﻿<div class="drawer-wrapper @(_isOpen ? "slide" : "")">
-    <div class="drawer-mask"></div>
+    <div class="drawer-mask" @onclick="Close"></div>
     <div class="drawer">
+        <div class="drawer-header">
+            <MudText Typo="Typo.h5">
+                @(_isUpdate ? "Ркдактирование действия" : "Добавление действия")
+            </MudText>
+        </div>
         <div class="drawer-content">
             @if (actionItemDto is not null)
             {
