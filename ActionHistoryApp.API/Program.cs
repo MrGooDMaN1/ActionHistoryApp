@@ -3,9 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<BlazingActionsContext>(options =>
- options.UseSqlite(builder.Configuration.GetConnectionString("BlazingActionsContext")));
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -25,14 +22,31 @@ builder.Services.AddCors(options =>
         });
 });
 
+// Настройка Entity Framework Core с SQL Server
+builder.Services.AddDbContext<BlazingActionsContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<BlazingActionsContext>();
-    dbContext.Database.EnsureCreated(); // Создаст БД если её нет
-    // или используйте dbContext.Database.Migrate() если используете миграции
+
+    // Только проверяем, что можем подключиться
+    var canConnect = dbContext.Database.CanConnect();
+    if (!canConnect)
+    {
+        // Логируем ошибку, но не прерываем запуск
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError("Не удалось подключиться к базе данных");
+    }
+    else
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogInformation("Подключение к базе данных успешно");
+    }
 }
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

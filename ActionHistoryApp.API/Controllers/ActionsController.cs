@@ -25,15 +25,20 @@ namespace ActionHistoryApp.API.Controllers
         {
             try
             {
+                _logger.LogInformation("Начало получения всех действий");
+
                 var actions = await _context.Actions
                     .OrderByDescending(a => a.WhenDid)
                     .ToListAsync();
+
+                _logger.LogInformation($"Получено {actions.Count} действий");
+
                 return Ok(actions);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Ошибка при получении действий");
-                return StatusCode(500, "Внутренняя ошибка сервера");
+                return StatusCode(500, new { error = ex.Message, innerError = ex.InnerException?.Message });
             }
         }
 

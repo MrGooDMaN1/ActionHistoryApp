@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace ActionHistoryApp.API.Persistence.Data.Migrations
+namespace ActionHistoryApp.API.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialEntities : Migration
+    public partial class nitialreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,12 +15,12 @@ namespace ActionHistoryApp.API.Persistence.Data.Migrations
                 name: "Actions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    DataBaseName = table.Column<string>(type: "TEXT", nullable: false),
-                    WhoDid = table.Column<string>(type: "TEXT", nullable: false),
-                    WhatDid = table.Column<string>(type: "TEXT", nullable: false),
-                    WhenDid = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    DataBaseName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    WhoDid = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    WhatDid = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    WhenDid = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
